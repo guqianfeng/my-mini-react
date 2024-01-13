@@ -13,7 +13,7 @@ const App = (
     </div>
 )
 
-// console.log(App)
+console.log(App)
 
 
 function AppTest () {
