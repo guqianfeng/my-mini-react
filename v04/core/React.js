@@ -9,7 +9,6 @@ function createTextNode(nodeValue) {
 }
 
 function createElement(type, props, ...children) {
-    console.log('自己写的createElement');
     return {
         type,
         props: {
@@ -55,7 +54,13 @@ function commitRoot () {
 
 function commitWork (fiber) {
     if (!fiber) return
-    fiber.parent.dom.append(fiber.dom)
+    let fiberParent = fiber.parent
+    while (!fiberParent.dom) {
+        fiberParent = fiberParent.parent
+    }
+    if (fiber.dom) {
+        fiberParent.dom.append(fiber.dom)
+    }
     commitWork(fiber.child)
     commitWork(fiber.sibling)
 }
@@ -72,9 +77,8 @@ function updateProps(dom, props) {
     })
 }
 
-function initChildren(fiber) {
+function initChildren(fiber, children) {
     // 3. 转换列表 设置好指针
-    const children = fiber.props.children
     let prevChild = null
     children.forEach((child, index) => {
         const newFiber = {
@@ -99,15 +103,20 @@ function initChildren(fiber) {
  * @returns 返回下一个任务
  */
 function performWorkOfUnit(fiber) {
-    if (!fiber.dom) {
-        // 1. 创建dom
-        const dom = (fiber.dom = createDom(fiber.type))
-        // fiber.parent.dom.append(dom)
-        // 2. 处理props
-        updateProps(dom, fiber.props)
+    // 判断是否是函数式组件
+    const isFunctionComponent = (typeof fiber.type === 'function')
+    if (!isFunctionComponent) {
+        if (!fiber.dom) {
+            // 1. 创建dom
+            const dom = (fiber.dom = createDom(fiber.type))
+            // fiber.parent.dom.append(dom)
+            // 2. 处理props
+            updateProps(dom, fiber.props)
+        }
     }
     // 3. 转换列表 设置好指针
-    initChildren(fiber)
+    const children = isFunctionComponent ? [fiber.type()] : fiber.props.children
+    initChildren(fiber, children)
     // 4. 返回下个任务 （先是孩子，再是兄弟，最后才是叔叔）
     if (fiber.child) {
         return fiber.child

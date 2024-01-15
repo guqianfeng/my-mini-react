@@ -1,27 +1,39 @@
 import React from './core/React.js';
-// const App = React.createElement('div', { id: 'app' },
-//     React.createElement('div', null, 'heihei'),
-//     React.createElement('div', null, 'haha'),
-//     React.createElement('div', null, 'hehe')
-// )
+
+function Counter() {
+    return (
+        <div>
+            counter
+        </div>
+    )
+}
+
+function CounterContainer() {
+    return (
+        <Counter />
+    )
+}
 
 const App = (
     <div id="app">
         <div>jsx-heihei</div>
         <div>jsx-haha</div>
         <div>jsx-hehe</div>
+        <Counter />
+        {/* <CounterContainer></CounterContainer> */}
     </div>
 )
 
-console.log(App)
-
-
-function AppTest () {
-    return (
-        <div id="test">app test</div>
-    )
-}
-console.log(AppTest);
-
+// function App() {
+//     return (
+//         <div id="app">
+//             <div>jsx-heihei</div>
+//             <div>jsx-haha</div>
+//             <div>jsx-hehe</div>
+//             <Counter />
+//             {/* <CounterContainer></CounterContainer> */}
+//         </div>
+//     )
+// }
 
 export default App
