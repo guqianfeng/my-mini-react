@@ -13,7 +13,10 @@ function createElement(type, props, ...children) {
         type,
         props: {
             ...props,
-            children: children.map(child => typeof child === 'string' ? createTextNode(child) : child)
+            children: children.map(child => {
+                const isTextNode = typeof child === 'string' || typeof child === 'number'
+                return isTextNode ? createTextNode(child) : child
+            })
         }
     }
 }
@@ -98,6 +101,23 @@ function initChildren(fiber, children) {
     })
 }
 
+function updateFunctionComponent (fiber) {
+    const children = [fiber.type(fiber.props)]
+    initChildren(fiber, children)
+}
+
+function updateHostComponent (fiber) {
+    if (!fiber.dom) {
+        // 1. 创建dom
+        const dom = (fiber.dom = createDom(fiber.type))
+        // fiber.parent.dom.append(dom)
+        // 2. 处理props
+        updateProps(dom, fiber.props)
+    }
+    const children = fiber.props.children
+    initChildren(fiber, children)
+}
+
 /**
  * @param {*} fiber 任务
  * @returns 返回下一个任务
@@ -105,28 +125,21 @@ function initChildren(fiber, children) {
 function performWorkOfUnit(fiber) {
     // 判断是否是函数式组件
     const isFunctionComponent = (typeof fiber.type === 'function')
-    if (!isFunctionComponent) {
-        if (!fiber.dom) {
-            // 1. 创建dom
-            const dom = (fiber.dom = createDom(fiber.type))
-            // fiber.parent.dom.append(dom)
-            // 2. 处理props
-            updateProps(dom, fiber.props)
-        }
+    if (isFunctionComponent) {
+        updateFunctionComponent(fiber)
+    } else {
+        updateHostComponent(fiber)
     }
-    // 3. 转换列表 设置好指针
-    const children = isFunctionComponent ? [fiber.type()] : fiber.props.children
-    initChildren(fiber, children)
     // 4. 返回下个任务 （先是孩子，再是兄弟，最后才是叔叔）
     if (fiber.child) {
         return fiber.child
     }
 
-    if (fiber.sibling) {
-        return fiber.sibling
+    let nextFiber = fiber
+    while(nextFiber) {
+        if(nextFiber.sibling) return nextFiber.sibling
+        nextFiber = nextFiber.parent
     }
-
-    return fiber.parent?.sibling
 }
 
 const React = {

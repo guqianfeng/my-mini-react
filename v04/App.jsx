@@ -1,9 +1,9 @@
 import React from './core/React.js';
 
-function Counter() {
+function Counter({ num }) {
     return (
         <div>
-            counter
+            counter: { num }
         </div>
     )
 }
@@ -16,7 +16,8 @@ function App() {
             <div>jsx-heihei</div>
             <div>jsx-haha</div>
             <div>jsx-hehe</div>
-            <Counter></Counter>
+            <Counter num={ 10 }></Counter>
+            <Counter num={ 20 }></Counter>
         </div>
     )
 }
