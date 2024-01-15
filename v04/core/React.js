@@ -19,10 +19,7 @@ function createElement(type, props, ...children) {
 }
 
 function render(el, container) {
-    // console.log(el);
-    const isFunctionComponent = typeof el
     nextWorkOfUnit = {
-        type: isFunctionComponent ? el : el.type,
         dom: container,
         props: {
             children: [el]

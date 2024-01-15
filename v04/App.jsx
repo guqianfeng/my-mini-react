@@ -8,32 +8,17 @@ function Counter() {
     )
 }
 
-function CounterContainer() {
+
+
+function App() {
     return (
-        <Counter />
+        <div id="app">
+            <div>jsx-heihei</div>
+            <div>jsx-haha</div>
+            <div>jsx-hehe</div>
+            <Counter></Counter>
+        </div>
     )
 }
-
-const App = (
-    <div id="app">
-        <div>jsx-heihei</div>
-        <div>jsx-haha</div>
-        <div>jsx-hehe</div>
-        <Counter />
-        {/* <CounterContainer></CounterContainer> */}
-    </div>
-)
-
-// function App() {
-//     return (
-//         <div id="app">
-//             <div>jsx-heihei</div>
-//             <div>jsx-haha</div>
-//             <div>jsx-hehe</div>
-//             <Counter />
-//             {/* <CounterContainer></CounterContainer> */}
-//         </div>
-//     )
-// }
 
 export default App
