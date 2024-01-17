@@ -31,6 +31,7 @@ function render(el, container) {
     root = nextWorkOfUnit
 }
 
+let currentRoot = null
 let root = null
 let nextWorkOfUnit = null
 function workLoop(IdleDeadline) {
@@ -52,6 +53,7 @@ requestIdleCallback(workLoop)
 
 function commitRoot () {
     commitWork(root.child)
+    commitRoot = root
     root = null
 }
 
@@ -148,9 +150,18 @@ function performWorkOfUnit(fiber) {
     }
 }
 
+function update() {
+    nextWorkOfUnit = {
+        dom: currentRoot.dom,
+        props: currentRoot.props
+    }
+    root = nextWorkOfUnit
+}
+
 const React = {
     createElement,
     render,
+    update
 }
 
 export default React
