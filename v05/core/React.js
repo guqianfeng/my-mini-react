@@ -53,7 +53,7 @@ requestIdleCallback(workLoop)
 
 function commitRoot () {
     commitWork(root.child)
-    commitRoot = root
+    currentRoot = root
     root = null
 }
 
@@ -64,7 +64,7 @@ function commitWork (fiber) {
         fiberParent = fiberParent.parent
     }
     if (fiber.effectTag === 'update') {
-        updateProps()
+        updateProps(fiber.dom, fiber.props, fiber.alternate?.props)
     } else if(fiber.effectTag === 'placement') {
         if (fiber.dom) {
             fiberParent.dom.append(fiber.dom)
@@ -78,17 +78,31 @@ function createDom(type) {
     return type === 'TEXT_ELEMENT' ? document.createTextNode("") : document.createElement(type)
 }
 
-function updateProps(dom, props) {
-    Object.keys(props).forEach(key => {
+function updateProps(dom, nextProps, prevProps) {
+    // 1. 老的有 新的没有 删除
+    Object.keys(prevProps).forEach(key => {
         if (key !== 'children') {
-            if (key.startsWith('on')) {
-                const eventType = key.slice(2).toLowerCase()
-                dom.addEventListener(eventType, props[key])
-            } else {
-                dom[key] = props[key]
+            if (!(key in nextProps)) {
+                dom.removeAttribute(key)
             }
         }
     })
+    // 2. 新的有 老的没有 添加
+    // 3. 新的有 老的也有 更新
+    Object.keys(nextProps).forEach(key => {
+        if (key !== 'children') {
+            if (nextProps[key] !== prevProps[key]) {
+                if (key.startsWith('on')) {
+                    const eventType = key.slice(2).toLowerCase()
+                    dom.removeEventListener(eventType, prevProps[key])
+                    dom.addEventListener(eventType, nextProps[key])
+                } else {
+                    dom[key] = nextProps[key]
+                }
+            }
+        }
+    })
+
 }
 
 function initChildren(fiber, children) {
@@ -146,7 +160,7 @@ function updateHostComponent (fiber) {
         const dom = (fiber.dom = createDom(fiber.type))
         // fiber.parent.dom.append(dom)
         // 2. 处理props
-        updateProps(dom, fiber.props)
+        updateProps(dom, fiber.props, {})
     }
     const children = fiber.props.children
     initChildren(fiber, children)
