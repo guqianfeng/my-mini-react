@@ -22,17 +22,17 @@ function createElement(type, props, ...children) {
 }
 
 function render(el, container) {
-    nextWorkOfUnit = {
+    wipRoot = {
         dom: container,
         props: {
             children: [el]
         }
     }
-    root = nextWorkOfUnit
+    nextWorkOfUnit = wipRoot
 }
 
 let currentRoot = null
-let root = null
+let wipRoot = null
 let nextWorkOfUnit = null
 function workLoop(IdleDeadline) {
     let shouldYield = false // 是否需要让步，初始值不让步，这样能进入while循环做任务
@@ -43,7 +43,7 @@ function workLoop(IdleDeadline) {
         shouldYield = IdleDeadline.timeRemaining() < 1
     }
 
-    if (!nextWorkOfUnit && root) {
+    if (!nextWorkOfUnit && wipRoot) {
         commitRoot()
     }
 
@@ -51,13 +51,13 @@ function workLoop(IdleDeadline) {
 }
 requestIdleCallback(workLoop)
 
-function commitRoot () {
-    commitWork(root.child)
-    currentRoot = root
-    root = null
+function commitRoot() {
+    commitWork(wipRoot.child)
+    currentRoot = wipRoot
+    wipRoot = null
 }
 
-function commitWork (fiber) {
+function commitWork(fiber) {
     if (!fiber) return
     let fiberParent = fiber.parent
     while (!fiberParent.dom) {
@@ -65,7 +65,7 @@ function commitWork (fiber) {
     }
     if (fiber.effectTag === 'update') {
         updateProps(fiber.dom, fiber.props, fiber.alternate?.props)
-    } else if(fiber.effectTag === 'placement') {
+    } else if (fiber.effectTag === 'placement') {
         if (fiber.dom) {
             fiberParent.dom.append(fiber.dom)
         }
@@ -105,7 +105,7 @@ function updateProps(dom, nextProps, prevProps) {
 
 }
 
-function initChildren(fiber, children) {
+function reconcileChildren(fiber, children) {
     let oldFiber = fiber.alternate?.child
     // console.log(fiber);
     // 3. 转换列表 设置好指针
@@ -149,12 +149,12 @@ function initChildren(fiber, children) {
     })
 }
 
-function updateFunctionComponent (fiber) {
+function updateFunctionComponent(fiber) {
     const children = [fiber.type(fiber.props)]
-    initChildren(fiber, children)
+    reconcileChildren(fiber, children)
 }
 
-function updateHostComponent (fiber) {
+function updateHostComponent(fiber) {
     if (!fiber.dom) {
         // 1. 创建dom
         const dom = (fiber.dom = createDom(fiber.type))
@@ -163,7 +163,7 @@ function updateHostComponent (fiber) {
         updateProps(dom, fiber.props, {})
     }
     const children = fiber.props.children
-    initChildren(fiber, children)
+    reconcileChildren(fiber, children)
 }
 
 /**
@@ -184,19 +184,19 @@ function performWorkOfUnit(fiber) {
     }
 
     let nextFiber = fiber
-    while(nextFiber) {
-        if(nextFiber.sibling) return nextFiber.sibling
+    while (nextFiber) {
+        if (nextFiber.sibling) return nextFiber.sibling
         nextFiber = nextFiber.parent
     }
 }
 
 function update() {
-    nextWorkOfUnit = {
+    wipRoot = {
         dom: currentRoot.dom,
         props: currentRoot.props,
         alternate: currentRoot
     }
-    root = nextWorkOfUnit
+    nextWorkOfUnit = wipRoot
 }
 
 const React = {
