@@ -63,8 +63,12 @@ function commitWork (fiber) {
     while (!fiberParent.dom) {
         fiberParent = fiberParent.parent
     }
-    if (fiber.dom) {
-        fiberParent.dom.append(fiber.dom)
+    if (fiber.effectTag === 'update') {
+        updateProps()
+    } else if(fiber.effectTag === 'placement') {
+        if (fiber.dom) {
+            fiberParent.dom.append(fiber.dom)
+        }
     }
     commitWork(fiber.child)
     commitWork(fiber.sibling)
@@ -88,17 +92,39 @@ function updateProps(dom, props) {
 }
 
 function initChildren(fiber, children) {
+    let oldFiber = fiber.alternate?.child
     // console.log(fiber);
     // 3. 转换列表 设置好指针
     let prevChild = null
     children.forEach((child, index) => {
-        const newFiber = {
-            type: child.type,
-            props: child.props,
-            child: null,
-            parent: fiber,
-            sibling: null,
-            dom: null,
+        const isSameType = oldFiber && oldFiber.type === child.type
+        let newFiber
+        if (isSameType) {
+            // update
+            newFiber = {
+                type: child.type,
+                props: child.props,
+                child: null,
+                parent: fiber,
+                sibling: null,
+                dom: oldFiber.dom, // 更新不会创建新的dom
+                effectTag: 'update', // 区分更新还是创建
+                alternate: oldFiber
+            }
+        } else {
+            // create
+            newFiber = {
+                type: child.type,
+                props: child.props,
+                child: null,
+                parent: fiber,
+                sibling: null,
+                dom: null,
+                effectTag: 'placement' // 区分更新还是创建
+            }
+        }
+        if (oldFiber) {
+            oldFiber = oldFiber.sibling // 多个孩子情况：更新oldFiber为他的兄弟节点
         }
         if (index === 0) {
             fiber.child = newFiber
@@ -153,7 +179,8 @@ function performWorkOfUnit(fiber) {
 function update() {
     nextWorkOfUnit = {
         dom: currentRoot.dom,
-        props: currentRoot.props
+        props: currentRoot.props,
+        alternate: currentRoot
     }
     root = nextWorkOfUnit
 }
